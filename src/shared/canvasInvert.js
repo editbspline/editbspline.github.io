@@ -1,6 +1,6 @@
 /* @flow */
 
-import { type StrictTupleVector, Vector } from '../graphs/Vector';
+import { type StrictTupleVector, Vector } from '../algebra/Vector';
 
 /**
  * Inverts the vertical component of position vectors for points

@@ -1,6 +1,6 @@
 /* @flow */
 
-import { type StrictTupleVector, Vector } from '../graphs/Vector';
+import { type StrictTupleVector, Vector } from '../algebra/Vector';
 
 /**
  * Shifts and scales each vector in the {@code vectors}

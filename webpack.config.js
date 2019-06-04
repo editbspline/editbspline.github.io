@@ -2,11 +2,14 @@ const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const path = require('path');
 
 module.exports = {
-  entry: './src/index.js',
+  entry: {
+    app: './src/index.js',
+    requestIdleCallback: './shims/requestIdleCallback.js',
+  },
   externals: {
     mathjax: 'MathJAX',
   },
-  mode: 'production',
+  mode: 'development',
   module: {
     rules: [
       {
@@ -26,7 +29,7 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'visualizer.bundle.js',
+    filename: '[name].bundle.js',
   },
   plugins: [ ],
 };

@@ -1,21 +1,21 @@
 /* @flow */
 
 import Box from '@material-ui/core/Box';
-import BSplineModel from '../BSplineModel';
+import { BSplineModel } from '../BSplineModel';
 import ControlPointsEditor from './ControlPointsEditor';
 import Divider from '@material-ui/core/Divider';
 import MultiSlider from 'multi-slider/src';
 import NumberField from '../NumberField';
 import * as React from 'react';
 import times from 'lodash/times';
-import { UniformKnotVector } from '../../graphs/BSpline';
+import { UniformKnotVector } from '../../algebra/BSpline';
 import {
   type TupleVector, type StrictTupleVector,
   safeUpdateComponent,
   operandDimens,
   safeUpdateDimensions,
   Vector,
-} from '../../graphs/Vector';
+} from '../../algebra/Vector';
 
 export type BSplineEditorProps = {
   controlPoints: Array<TupleVector | number>,
@@ -30,7 +30,11 @@ type BSplineEditorState = {
 };
 
 export class BSplineEditor extends React.Component<BSplineEditorProps, BSplineEditorState> {
+  // $FlowFixMe: BSplineModel is a react component (flow doesn't agree).
   modelRef: { current: ?React.ElementRef<BSplineModel> };
+  sliderRef: { current: ?React.ElementRef<MultiSlider> };
+  colors: Array<number>;
+  stringColors: Array<string>;
 
   constructor(props: BSplineEditorProps) {
     super(props);
@@ -48,20 +52,20 @@ export class BSplineEditor extends React.Component<BSplineEditorProps, BSplineEd
     this.modelRef = React.createRef();
   }
 
-  #diffKnots() {
+  diffKnots() {
     const diffs = new Array(this.state.knotVector.length + 1);
 
     diffs[0] = 0;
     for (let i = 1; i < this.state.knotVector.length; i++) {
-      diffs[i] = (this.state.displayedKnotVector[i] - this.state.displayedKnotVector[i-1]) *100;
+      diffs[i] = (this.state.displayedKnotVector[i] - this.state.displayedKnotVector[i - 1]) * 100;
     }
 
-    diffs[this.state.knotVector.length] = 100 *(1 - this.state.displayedKnotVector[this.state.knotVector.length - 1]);
+    diffs[this.state.knotVector.length] = 100 * (1 - this.state.displayedKnotVector[this.state.knotVector.length - 1]);
 
     return diffs;
   }
 
-  #cumulateDiffs(diffs) {
+  cumulateDiffs(diffs) {
     const knots = new Array(diffs.length - 1);
     let val = 0;
 
@@ -94,7 +98,7 @@ export class BSplineEditor extends React.Component<BSplineEditorProps, BSplineEd
       return {
         controlPoints: newControlPoints,
         knotVector,
-        displayedKnotVector: knotVector
+        displayedKnotVector: knotVector,
       };
     });
   }
@@ -112,20 +116,21 @@ export class BSplineEditor extends React.Component<BSplineEditorProps, BSplineEd
       return {
         controlPoints: newControlPoints,
         knotVector,
-        displayedKnotVector: knotVector
+        displayedKnotVector: knotVector,
       };
     });
   }
 
   onChangeDegree = (curveDegree: number) => {
-    if (curveDegree >= this.state.controlPoints.length)
+    if (curveDegree >= this.state.controlPoints.length) {
       return;
+    }
 
     const knotVector = UniformKnotVector(this.state.controlPoints.length + curveDegree + 1);
     this.setState({
       curveDegree,
       knotVector,
-      displayedKnotVector: knotVector
+      displayedKnotVector: knotVector,
     });
   }
 
@@ -146,21 +151,21 @@ export class BSplineEditor extends React.Component<BSplineEditorProps, BSplineEd
   }
 
   onChangeKnot = (diffs) => {
-    const knotVector = this.#cumulateDiffs(diffs);
+    const knotVector = this.cumulateDiffs(diffs);
 
     this.setState({
       knotVector,
-      displayedKnotVector: knotVector
+      displayedKnotVector: knotVector,
     });
   }
 
   render() {
-    if (!this.colors || this.colors.length != this.state.knotVector.length + 2) {
+    if (!this.colors || this.colors.length !== this.state.knotVector.length + 2) {
       this.colors = new Array(this.state.knotVector.length + 2);
       this.stringColors = new Array(this.colors.length);
       for (let i = 0; i < this.colors.length; i++) {
         this.colors[i] = Math.round(Math.random() * 0xffffff);
-        this.stringColors[i] = '#' + ('00000' + (this.colors[i] | 0).toString(16)).substr(-6);
+        this.stringColors[i] = String((`00000${ (this.colors[i] | 0).toString(16) }`).substr(-6));
       }
     }
 
@@ -168,7 +173,7 @@ export class BSplineEditor extends React.Component<BSplineEditorProps, BSplineEd
       <div style={{ width: '100%', height: '75%',
         padding: '0px', margin: '0px' }}>
         <Box display="flex" flexDirection="row" justifyContent="space-between"
-            style={{ height: '100%' }}>
+          style={{ height: '100%' }}>
           <div style={{
             borderRight: '1px solid black',
             height: '100vh',
@@ -203,13 +208,14 @@ export class BSplineEditor extends React.Component<BSplineEditorProps, BSplineEd
               colors={this.colors}
               controlPoints={this.state.controlPoints}
               curveDegree={this.state.curveDegree}
+              enforcedDimensions={this.state.dimensions}
               knotVector={this.state.knotVector}
               ref={this.modelRef} />
             <span style={{
-                fontWeight: "bold",
-                fontSize: "14px",
-                alignSelf: 'flex-start',
-                margin: '8px'
+              fontWeight: 'bold',
+              fontSize: '14px',
+              alignSelf: 'flex-start',
+              margin: '8px',
             }}>
               Edit Knot Vector (slow)
             </span>
@@ -222,7 +228,7 @@ export class BSplineEditor extends React.Component<BSplineEditorProps, BSplineEd
               onChange={this.onChangeKnot}
               ref={this.sliderRef}
               trackSize={2}
-              values={this.#diffKnots()} />
+              values={this.diffKnots()} />
           </Box>
         </Box>
       </div>

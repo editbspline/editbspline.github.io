@@ -1,6 +1,6 @@
 /* @flow */
 
-import { type StrictTupleVector } from '../graphs/Vector';
+import { type StrictTupleVector } from '../algebra/Vector';
 
 /**
  * Finds the smallest rectangle in which all given 2-D

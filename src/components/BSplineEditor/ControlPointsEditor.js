@@ -9,7 +9,7 @@ import {
   type TupleVector,
   mapVector,
   safeUpdateComponent,
-} from '../../graphs/Vector';
+} from '../../algebra/Vector';
 
 type Props = {
   controlPoints: Array<TupleVector | number>,

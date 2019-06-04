@@ -3,7 +3,7 @@
 import BSplineEditor from './components/BSplineEditor';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Vector } from './graphs/Vector';
+import { Vector } from './algebra/Vector';
 
 const initialApplication = (
   <BSplineEditor curveDegree={2}
