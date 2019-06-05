@@ -151,7 +151,7 @@ export function add(...args: Array<number | StrictTupleVector>) {
 }
 
 export function scaleVector(vector: TupleVector, scale: number) {
-  if (scale === 0 && vector === 0) {
+  if (scale === 0 || vector === 0) {
     return 0;
   }
 

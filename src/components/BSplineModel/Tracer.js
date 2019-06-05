@@ -2,10 +2,11 @@ import projectToCanvasPlane from './projectToCanvasPlane';
 import round from 'lodash/round';
 
 export class Tracer {
-  constructor(minKnot, maxKnot, queryStep, spline) {
+  constructor(minKnot, maxKnot, queryStep, enforcedDimensions, spline) {
     this.minKnot = minKnot;
     this.maxKnot = maxKnot;
     this.queryStep = queryStep;
+    this.enforcedDimensions = enforcedDimensions;
     this.spline = spline;
     this.param = minKnot;
     this.feederArray = [];
@@ -14,7 +15,7 @@ export class Tracer {
   doTrace = (idleDeadline) => {
     while (this.param <= this.maxKnot && idleDeadline.timeRemaining() > 0) {
       this.feederArray.push(projectToCanvasPlane(
-        this.param, this.spline.evaluate(this.param)
+        this.param, this.enforcedDimensions, this.spline.evaluate(this.param)
       ));
 
       this.param = round(this.param + this.queryStep, 4);

@@ -52,51 +52,13 @@ function roundPrec(roundee: number) {
   return round(roundee, PREC);
 }
 
-function ricTrace(/* eslint-disable-line max-params */
-  param: number, maxParam: number,
-  step: number, spline: Evaluable,
-  feederArray: Array<StrictTupleVector>,
-  onTraceOver: () => void,
-  idleDeadline: any
-): void {
-  while (param <= maxParam && idleDeadline.timeRemaining() > 0) {
-    feederArray.push(projectToCanvasPlane(param, spline.evaluate(param)));
-    param = roundPrec(param + step);
-  }
-
-  if (param >= maxParam) {
-    onTraceOver();
-  } else {
-    window.requestIdleCallback((newIdleDeadline) => {
-      ricTrace(param, maxParam, step, spline, feederArray,
-        onTraceOver, newIdleDeadline);
-    });
-  }
-}
-
-function traceAsync(
-  minKnot: number, maxKnot: number,
-  queryStep: number, spline: Evaluable,
-): Promise<Array<StrictTupleVector>> {
-  const feederArray: Array<StrictTupleVector> = [];
-
-  return new Promise((resolve) => {
-    requestIdleCallback((idleDeadline) => {
-      ricTrace(minKnot, maxKnot, queryStep, spline, feederArray, () => {
-        resolve(feederArray);
-      }, idleDeadline);
-    }, {
-      timeout: 100,
-    });
-  });
-}
-
 function traceAllAsync(
   minKnot: number, maxKnot: number,
-  queryStep: number, splines: Array<Evaluable>,
+  queryStep: number, enforcedDimensions: number,
+  splines: Array<Evaluable>,
 ): Promise<Array<Array<StrictTupleVector>>> {
   return Promise.all(splines.map((spline) => new Tracer(
-    minKnot, maxKnot, queryStep, spline
+    minKnot, maxKnot, queryStep, enforcedDimensions, spline
   ).run()));
 }
 
@@ -266,74 +228,73 @@ export class BSplineModel extends React.Component<Props, State> {
 
     /* planarPoints is the 2-D projection of the spline */
     const planarPoints: Array<StrictTupleVector> = [];
-    const basisPoints: Array<Array<StrictTupleVector>> = [];
+    let basisPoints: Array<Array<StrictTupleVector>> = [];
 
-    /* Calculate basis spline curves first. */
+    /* Calculate basis spline curves first. *
     spline.basis.forEach((basisSpline) => {
       const bsPoints = [];
 
       for (let param = minKnot; param <= maxKnot;
         param = roundPrec(param + queryStep)) {
-        bsPoints.push(projectToCanvasPlane(param,
-          (basisSpline.evaluate(param): any)));
+        const vector = (basisSpline.evaluate(param): any);
+        bsPoints.push(projectToCanvasPlane(param, vector));
       }
 
       basisPoints.push(bsPoints);
-    });
+    }); */
 
-    traceAllAsync(minKnot, maxKnot, queryStep, spline.basis).then((result) => {
-      //      basisPoints = result;
+    traceAllAsync(minKnot, maxKnot, queryStep, this.props.enforcedDimensions, spline.basis)
+      .then((result) => {
+        basisPoints = result;
 
-      /* Sum up basis spline curves to form main curve. */
-      if (this.props.enforcedDimensions === 1) {
-        for (let param = minKnot, idx = 0; param <= maxKnot;
-          param = roundPrec(param + this.pixi.queryStep), idx++) {
-          let sum = 0;
-          for (let bsIdx = 0; bsIdx < basisPoints.length; bsIdx++) {
-            sum += basisPoints[bsIdx][idx].y;
+        /* Sum up basis spline curves to form main curve. */
+        if (this.props.enforcedDimensions === 1) {
+          for (let param = minKnot, idx = 0; param <= maxKnot;
+            param = roundPrec(param + this.pixi.queryStep), idx++) {
+            let sum = 0;
+            for (let bsIdx = 0; bsIdx < basisPoints.length; bsIdx++) {
+              sum += basisPoints[bsIdx][idx].y;
+            }
+            planarPoints.push(Vector(param, round(sum, PREC)));
           }
-          planarPoints.push(Vector(param, round(sum, PREC)));
-        }
-      } else {
-        for (let param = minKnot, idx = 0; param <= maxKnot;
-          param = roundPrec(param + this.pixi.queryStep), idx++) {
-          let sum = 0;
-          for (let bsIdx = 0; bsIdx < basisPoints.length; bsIdx++) {
-            sum = add(sum, basisPoints[bsIdx][idx]);
+        } else {
+          for (let param = minKnot, idx = 0; param <= maxKnot;
+            param = roundPrec(param + this.pixi.queryStep), idx++) {
+            let sum = 0;
+            for (let bsIdx = 0; bsIdx < basisPoints.length; bsIdx++) {
+              sum = add(sum, basisPoints[bsIdx][idx]);
+            }
+            planarPoints.push((sum: any));
           }
-          planarPoints.push((sum: any));
         }
-      }
 
-      /* Calculate positions of control-points. */
-      let controlPointsProjections: Array<StrictTupleVector> = [];
-      if (this.props.enforcedDimensions === 1) {
-        for (let i = 0; i < this.props.controlPoints.length; i++) {
-          controlPointsProjections.push(
-            Vector(round(
-              minKnot + (i * (maxKnot - minKnot) / (this.props.controlPoints.length - 1)), PREC),
-            safeOneDValue(this.props.controlPoints[i])));
+        /* Calculate positions of control-points. */
+        let controlPointsProjections: Array<StrictTupleVector> = [];
+        if (this.props.enforcedDimensions === 1) {
+          for (let i = 0; i < this.props.controlPoints.length; i++) {
+            controlPointsProjections.push(
+              Vector(round(
+                minKnot + (i * (maxKnot - minKnot) / (this.props.controlPoints.length - 1)), PREC),
+              safeOneDValue(this.props.controlPoints[i])));
+          }
+        } else if (this.props.enforcedDimensions === 2) {
+          controlPointsProjections = (this.props.controlPoints.slice(0): any);
         }
-      } else if (this.props.enforcedDimensions === 2) {
-        controlPointsProjections = (this.props.controlPoints.slice(0): any);
-      }
 
-      console.log(planarPoints);
-
-      this.pixi.visibleBounds = visibleBounds(
-        concat(planarPoints, controlPointsProjections), VISIBLE_PADDING);
-      this.pixi.planarPoints = this.transformToCanvas(planarPoints, false);
-      this.pixi.basisPoints = basisPoints;
-      basisPoints.forEach((channel) => {
-        this.transformToCanvas(channel, false);
-      });
-      this.pixi.controlPointsProjections =
+        this.pixi.visibleBounds = visibleBounds(
+          concat(planarPoints, controlPointsProjections), VISIBLE_PADDING);
+        this.pixi.planarPoints = this.transformToCanvas(planarPoints, false);
+        this.pixi.basisPoints = basisPoints;
+        basisPoints.forEach((channel) => {
+          this.transformToCanvas(channel, false);
+        });
+        this.pixi.controlPointsProjections =
         this.transformToCanvas(controlPointsProjections, false);
 
-      this.setState({
-        isGraphReady: true,
+        this.setState({
+          isGraphReady: true,
+        });
       });
-    });
   }
 
   /**
@@ -390,7 +351,7 @@ export class BSplineModel extends React.Component<Props, State> {
       /* eslint-disable-next-line react/no-direct-mutation-state */
       this.state.isGraphReady = false;
     } else if (this.pixi) {
-      this.graph();
+      requestIdleCallback(() => this.graph());
       this.drawLoading();
     }
 

@@ -165,7 +165,7 @@ export class BSplineEditor extends React.Component<BSplineEditorProps, BSplineEd
       this.stringColors = new Array(this.colors.length);
       for (let i = 0; i < this.colors.length; i++) {
         this.colors[i] = Math.round(Math.random() * 0xffffff);
-        this.stringColors[i] = String((`00000${ (this.colors[i] | 0).toString(16) }`).substr(-6));
+        this.stringColors[i] = `#${ String((`00000${ (this.colors[i] | 0).toString(16) }`).substr(-6)) }`;
       }
     }
 
@@ -222,12 +222,12 @@ export class BSplineEditor extends React.Component<BSplineEditorProps, BSplineEd
             <MultiSlider
               colors={this.stringColors}
               handleStrokeSize={2}
-              handleInnerDotSize={2}
-              handleSize={6}
+              handleInnerDotSize={3}
+              handleSize={9}
               height={36}
               onChange={this.onChangeKnot}
               ref={this.sliderRef}
-              trackSize={2}
+              trackSize={4}
               values={this.diffKnots()} />
           </Box>
         </Box>

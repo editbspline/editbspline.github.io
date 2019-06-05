@@ -9,7 +9,7 @@ import { add, type TupleVector } from './Vector';
  * Returns the sum of the given evaluations.
  */
 export function linearCombiner(
-  dataPoints: Array<number | TupleVector>
+  ...dataPoints: Array<number | TupleVector>
 ): number | TupleVector {
   return add(...dataPoints);
 }
@@ -36,7 +36,7 @@ export class Spline implements Evaluable {
    * @name Spline#basis
    * @type Array<Evaluable>
    */
-  combiner: (Array<number | TupleVector>) => number | TupleVector;
+  combiner: (...Array<number | TupleVector>) => number | TupleVector;
 
   /**
    * @param {Array<Spline | BasisPolynomial>} basis
@@ -44,7 +44,7 @@ export class Spline implements Evaluable {
    */
   constructor(
     basis: Array<Spline | BasisPolynomial> = [],
-    combiner: (Array<number | TupleVector>) => number | TupleVector = linearCombiner
+    combiner: (...args: Array<number | TupleVector>) => number | TupleVector = linearCombiner
   ) {
     if (arguments.length > 2 ||
       combiner instanceof BasisPolynomial) {
@@ -72,7 +72,7 @@ export class Spline implements Evaluable {
   }
 
   evaluate(point: number) {
-    return this.combiner(this.basis.map((basisPoly) => (
+    return this.combiner.apply(null, this.basis.map((basisPoly) => (
       basisPoly.evaluate(point)
     )));
   }

@@ -1,6 +1,6 @@
 /* @flow */
 
-import { type StrictTupleVector, Vector } from '../../algebra/Vector';
+import { type StrictTupleVector, type TupleVector, Vector } from '../../algebra/Vector';
 
 /**
  * Projects an evaulated B-Spline position vector onto a
@@ -13,20 +13,21 @@ import { type StrictTupleVector, Vector } from '../../algebra/Vector';
  */
 export function projectToCanvasPlane(
   input: number,
+  enforcedDimensions: number,
   positionVector: StrictTupleVector | number
-): StrictTupleVector {
-  if (typeof positionVector === 'number') {
+): TupleVector {
+  if (typeof positionVector === 'number' && positionVector !== 0) {
     return Vector(input, positionVector);
   }
 
-  if (positionVector.dimensions === 1) {
-    return Vector(input, positionVector[0]);
-  } else if (positionVector.dimensions === 2) {
+  if (enforcedDimensions === 1) {
+    return Vector(input, 0);
+  } else if (enforcedDimensions === 2) {
     return positionVector;
   }
 
   throw new Error(`Support for higher dimensions than 2 isn't complete.
-    ${ positionVector.dimensions }`);
+    ${ positionVector === 0 ? 0 : positionVector.dimensions }`);
 }
 
 export default projectToCanvasPlane;
