@@ -2,6 +2,7 @@
 
 import { Add, Remove } from '@material-ui/icons';
 import Box from '@material-ui/core/Box';
+import FormLabel from '@material-ui/core/FormLabel';
 import IconButton from '@material-ui/core/IconButton';
 import * as React from 'react';
 import TextField from '@material-ui/core/TextField';
@@ -57,11 +58,19 @@ export class ControlPointsEditor extends React.Component<Props, State> {
 
   render = () => (
     <React.Fragment>
-      <span style={{ padding: '8px', margin: '8px', fontWeight: 'bold', fontSize: '14px' }}> Vectors </span>
+      <FormLabel style={{
+        padding: '8px',
+        margin: '8px',
+        fontWeight: 'bold',
+        fontSize: '14px',
+      }}>
+         Vectors
+      </FormLabel>
       {
         this.state.localControlPoints.map((point, index) => (
           <Box display="flex" flexDirection="row"
-            justifyContent="space-around" key={index}>
+            justifyContent="space-around" key={index}
+            margin="8px" padding="8px">
             {
               mapVector(point, (val, idx) => (
                 <TextField key={idx} value={val}

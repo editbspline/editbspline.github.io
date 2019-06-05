@@ -180,23 +180,27 @@ export class BSplineEditor extends React.Component<BSplineEditorProps, BSplineEd
             overflow: 'auto',
           }}>
             <Box display="flex" flexDirection="column">
-              <NumberField editable={false}
+              <NumberField buttonStyle={{ color: 'gray' }}
+                editable={false}
                 label="B-Spline Degree"
                 max={this.state.controlPoints.length - 1}
                 onChange={this.onChangeDegree}
                 value={this.state.curveDegree} />
               <Divider />
-              <NumberField editable={false}
-                label="Control-Point Dimensions"
+              <NumberField buttonStyle={{ color: 'gray' }}
+                editable={false}
+                label="Dimensions"
                 max={2}
                 onChange={this.onChangeDimensions}
                 value={this.state.dimensions} />
               <Divider />
-              <ControlPointsEditor controlPoints={this.state.controlPoints}
-                onPublishComponentChange={this.onPublishComponentChange}
-                enforcedDimensions={1}
-                onInsertControlPoint={this.onInsertControlPoint}
-                onDeleteControlPoint={this.onDeleteControlPoint} />
+              <div style={{ padding: '8px' }}>
+                <ControlPointsEditor controlPoints={this.state.controlPoints}
+                  onPublishComponentChange={this.onPublishComponentChange}
+                  enforcedDimensions={1}
+                  onInsertControlPoint={this.onInsertControlPoint}
+                  onDeleteControlPoint={this.onDeleteControlPoint} />
+              </div>
             </Box>
           </div>
           <Box alignItems="center"
@@ -221,13 +225,13 @@ export class BSplineEditor extends React.Component<BSplineEditorProps, BSplineEd
             </span>
             <MultiSlider
               colors={this.stringColors}
-              handleStrokeSize={2}
-              handleInnerDotSize={3}
-              handleSize={9}
+              handleStrokeSize={1}
+              handleInnerDotSize={2}
+              handleSize={7}
               height={36}
               onChange={this.onChangeKnot}
               ref={this.sliderRef}
-              trackSize={4}
+              trackSize={3}
               values={this.diffKnots()} />
           </Box>
         </Box>

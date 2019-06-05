@@ -1,6 +1,7 @@
 /* @flow */
 
 import Box from '@material-ui/core/Box';
+import FormLabel from '@material-ui/core/FormLabel';
 import IconButton from '@material-ui/core/IconButton';
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp';
@@ -9,6 +10,7 @@ import * as React from 'react';
 import TextField from '@material-ui/core/TextField';
 
 type Props = {
+  buttonStyle: any,
   onChange: (value: number) => void,
   editable: boolean,
   label: string,
@@ -33,6 +35,7 @@ type State = {
  */
 export class NumberField extends React.Component<Props, State> {
   static defaultProps = {
+    buttonStyle: {},
     editable: true,
     min: 1,
     max: 10,
@@ -111,11 +114,16 @@ export class NumberField extends React.Component<Props, State> {
 
   render = () => (
     <Box flexDirection="row" display="flex" alignItems="center"
-      padding="8px">
+      padding="8px" flexGrow="1">
       <Box display="flex" flexDirection="column">
-        <span style={{ fontSize: '14px', fontWeight: 'bold' }}>
+        <FormLabel style={{
+          fontSize: '14px',
+          fontWeight: 'bold',
+          padding: '8px',
+          margin: '8px',
+        }}>
           {this.props.label}
-        </span>
+        </FormLabel>
         <TextField disabled={!this.props.editable}
           value={this.state.rawText}
           inputProps= {{ style: { textAlign: 'center' } }}
@@ -124,12 +132,12 @@ export class NumberField extends React.Component<Props, State> {
       <Box display="flex" flexDirection="column">
         <IconButton key="up" onClick={
           () => this.onStepChange(this.state.value + this.props.step)
-        }>
+        } style={this.props.buttonStyle}>
           <KeyboardArrowUp fontSize="small" />
         </IconButton>
         <IconButton key="down" onClick={
           () => this.onStepChange(this.state.value - this.props.step)
-        }>
+        } style={this.props.buttonStyle}>
           <KeyboardArrowDown fontSize="small"/>
         </IconButton>
       </Box>
@@ -138,6 +146,7 @@ export class NumberField extends React.Component<Props, State> {
 }
 
 NumberField.propTypes = {
+  buttonStyle: PropTypes.object,
   /**
    * Invoked when the field is edited.
    */
