@@ -9,7 +9,7 @@ module.exports = {
   externals: {
     mathjax: 'MathJAX',
   },
-  mode: 'production',
+  mode: 'development',
   module: {
     rules: [
       {

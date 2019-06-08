@@ -1,5 +1,8 @@
 # editbspline.github.io
 B-Spline Editor
 
-This tool helps visualize B-Splines and how they work. It provides tools for directly manipulating 1D and 2D control points,
-adjusting the knot vector, and increasing/decreasing the degree of the curve.
+I have written this tool to allow students to visualize B-Splines. It uses
+explicit polynomial representations of B-Splines and can be debugged to
+produce specific results. In addition, this tool provides a fast and reliable
+way to let you create your own, custom B-Spline curves, provided you know
+how they work.

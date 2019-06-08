@@ -15,7 +15,7 @@ export function projectToCanvasPlane(
   input: number,
   enforcedDimensions: number,
   positionVector: StrictTupleVector | number
-): TupleVector {
+): StrictTupleVector {
   if (typeof positionVector === 'number' && positionVector !== 0) {
     return Vector(input, positionVector);
   }
@@ -23,7 +23,7 @@ export function projectToCanvasPlane(
   if (enforcedDimensions === 1) {
     return Vector(input, 0);
   } else if (enforcedDimensions === 2) {
-    return positionVector;
+    return (positionVector: any);
   }
 
   throw new Error(`Support for higher dimensions than 2 isn't complete.

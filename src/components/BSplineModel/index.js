@@ -13,6 +13,7 @@ import reduceDimens from '../../shared/reduceDimens';
 import round from 'lodash/round';
 import shiftAndScaleVectors from '../../shared/shiftAndScaleVectors';
 import Tracer from './Tracer';
+import TraceEmitter from './TraceEmitter';
 import {
   add, Vector,
   type StrictTupleVector, type TupleVector,
@@ -42,6 +43,12 @@ const MAIN_SPLINE_THICKNESS = 3;
 const PREC = 4;
 
 /**
+ * Converts the progress returned by {@code Tracer}
+ * into a percentage (used by material-ui's progress bar).
+ */
+const TO_PERCENT_SCALE = 100;
+
+/**
  * Rounds a number to {@code PREC} precision.
  *
  * @param {number} roundee - number to be rounded
@@ -69,7 +76,7 @@ function traceAllAsync(/* eslint-disable-line */
   queryStep: number, enforcedDimensions: number,
   splines: $ReadOnlyArray<Evaluable>,
   onUpdateProgress: (number) => void
-): Promise<Array<Array<TupleVector>>> {
+): Promise<Array<Array<StrictTupleVector>>> {
   return Promise.all(splines.map((spline) => new Tracer(
     minKnot, maxKnot, queryStep, enforcedDimensions, spline,
     onUpdateProgress
@@ -87,10 +94,15 @@ type Props = {
 type State = {
   isGraphReady: boolean,
   graphProgress: number,
-  graphLoading: boolean
+  graphLoading: boolean,
+  minKnot: number,
+  maxKnot: number,
+  spline: Evaluable
 };
 
 export class BSplineModel extends React.Component<Props, State> {
+  basisEmitter: TraceEmitter;
+
   /**
    * Reference to the canvas element used by this component. It
    * is used in {@code pixi.app}.
@@ -126,7 +138,17 @@ export class BSplineModel extends React.Component<Props, State> {
     isGraphReady: false,
     graphProgress: 100,
     graphLoading: false,
+    minKnot: 0,
+    maxKnot: 1,
+    spline: { evaluate: () => {
+      throw new Error('Doesn\'t exist.');
+    } },
   };
+
+  constructor(props: Props) {
+    super(props);
+    this.basisEmitter = new TraceEmitter(this.onTracedBasis);
+  }
 
   componentDidMount() {
     const dimens = reduceDimens(null,
@@ -224,10 +246,94 @@ export class BSplineModel extends React.Component<Props, State> {
     return planarPoints;
   }
 
+  projectControlPoints() {
+    const { minKnot, maxKnot } = this.state;
+
+    let controlPointsProjections: Array<StrictTupleVector> = [];
+    if (this.props.enforcedDimensions === 1) {
+      for (let i = 0; i < this.props.controlPoints.length; i++) {
+        controlPointsProjections.push(
+          Vector(round(
+            minKnot + (i * (maxKnot - minKnot) / (this.props.controlPoints.length - 1)), PREC),
+          safeOneDValue(this.props.controlPoints[i])));
+      }
+    } else if (this.props.enforcedDimensions === 2) {
+      controlPointsProjections = (this.props.controlPoints.slice(0): any);
+    }
+
+    return controlPointsProjections;
+  }
+
+  pixify(
+    mainTrace: Array<StrictTupleVector>,
+    basesTrace: Array<Array<StrictTupleVector>>,
+    controlPointsProjections: Array<StrictTupleVector>
+  ) {
+    this.pixi.visibleBounds = visibleBounds(
+      concat(mainTrace, controlPointsProjections), VISIBLE_PADDING);
+    this.pixi.planarPoints = this.transformToCanvas(mainTrace, false);
+    this.pixi.basisPoints = basesTrace;
+    basesTrace.forEach((channel) => {
+      this.transformToCanvas(channel, false);
+    });
+    this.pixi.controlPointsProjections =
+      this.transformToCanvas(controlPointsProjections, false);
+  }
+
+  onTracedBasis = (basisTraces: Array<Array<StrictTupleVector>>) => {
+    const planarPoints: Array<StrictTupleVector> = [];
+    const { minKnot, maxKnot } = this.state;
+
+    /* Sum up basis spline curves to form main curve. */
+    if (this.props.enforcedDimensions === 1) {
+      for (let param = minKnot, idx = 0; param <= maxKnot;
+        param = roundPrec(param + this.pixi.queryStep), idx++) {
+        let sum = 0;
+        for (let bsIdx = 0; bsIdx < basisTraces.length; bsIdx++) {
+          sum += basisTraces[bsIdx][idx].y;
+        }
+        planarPoints.push(Vector(param, round(sum, PREC)));
+      }
+    } else {
+      for (let param = minKnot, idx = 0; param <= maxKnot;
+        param = roundPrec(param + this.pixi.queryStep), idx++) {
+        let sum = 0;
+        for (let bsIdx = 0; bsIdx < basisTraces.length; bsIdx++) {
+          sum = add(sum, basisTraces[bsIdx][idx]);
+        }
+        planarPoints.push((sum: any));
+      }
+    }
+
+    this.pixify(planarPoints, basisTraces, this.projectControlPoints());
+    this.setState({ isGraphReady: true, graphLoading: false });
+  }
+
   onUpdateGraphProgress = (progress: number) => {
     this.setState({
-      graphProgress: progress * 100,
+      graphProgress: progress * TO_PERCENT_SCALE,
     });
+  }
+
+  graph = () => {
+    const spline = BSpline(this.props.knotVector,
+      this.props.controlPoints, this.props.curveDegree, true);
+    const minKnot = spline.curveRange.lowerBoundary;
+    const maxKnot = spline.curveRange.upperBoundary;
+    this.adjustQueryStep(minKnot, maxKnot);
+    const { queryStep } = this.pixi;
+
+    this.setState({
+      graphProgress: 0,
+      graphLoading: true,
+      minKnot, maxKnot,
+    });
+
+    this.basisEmitter.run(spline.basis.map((basisPoly) =>
+      new Tracer(minKnot, maxKnot, queryStep,
+        this.props.enforcedDimensions, basisPoly,
+        this.onUpdateGraphProgress)
+    ));
   }
 
   /**
@@ -240,7 +346,7 @@ export class BSplineModel extends React.Component<Props, State> {
    * This an expensive computation that (should) be executed
    * in background.
    */
-  graph = () => {
+  graphDeprecated = () => {
     this.setState({
       graphProgress: 0,
       graphLoading: true,

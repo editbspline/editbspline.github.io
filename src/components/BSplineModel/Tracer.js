@@ -3,7 +3,7 @@
 import { Evaluable } from '../../algebra/Evaluable';
 import projectToCanvasPlane from './projectToCanvasPlane';
 import round from 'lodash/round';
-import { type TupleVector } from '../../algebra/Vector';
+import { type StrictTupleVector } from '../../algebra/Vector';
 
 const PREC = 4;
 
@@ -55,12 +55,23 @@ export class Tracer {
   /**
    * Array of evaluations projected to the a 2D plane.
    */
-  feederArray: Array<TupleVector>;
+  feederArray: Array<StrictTupleVector>;
+
+  /**
+   * Current {@code requestIdleCallback} handle used by
+   * this tracer.
+   */
+  #ricHandle: any;
 
   /**
    * Internally used to resolve {@code run}'s promise.
    */
   onFinish: void | () => void;
+
+  /**
+   * Run tag used (internally) by {@code TracerEmitter}.
+   */
+  teRunTag: number | void;
 
   constructor(minKnot: number, maxKnot: number,/* eslint-disable-line */
     queryStep: number, enforcedDimensions: number,
@@ -97,7 +108,8 @@ export class Tracer {
         this.onUpdateProgress((this.#param - this.minKnot) /
           (this.maxKnot - this.minKnot));
       }
-      window.requestIdleCallback(this.doTrace);
+
+      this.#ricHandle = window.requestIdleCallback(this.doTrace);
     }
   }
 
@@ -106,10 +118,17 @@ export class Tracer {
    * once to prevent corruption/leaks.
    */
   run() {
-    return new Promise<Array<TupleVector>>((resolve) => {
+    return new Promise<Array<StrictTupleVector>>((resolve) => {
       this.onFinish = () => resolve(this.feederArray);
-      window.requestIdleCallback(this.doTrace);
+      this.#ricHandle = window.requestIdleCallback(this.doTrace);
     });
+  }
+
+  /**
+   * Cancels this tracer.
+   */
+  cancel() {
+    window.cancelIdleCallback(this.#ricHandle);
   }
 }
 
