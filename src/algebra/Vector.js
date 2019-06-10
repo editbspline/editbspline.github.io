@@ -3,7 +3,9 @@
 import clippedArrayAccess from '../shared/clippedArrayAccess';
 import concat from 'lodash/concat';
 import constant from 'lodash/constant';
+import every from 'lodash/every';
 import isArray from 'lodash/isArray';
+import round from 'lodash/round';
 import times from 'lodash/times';
 
 /* eslint-disable no-use-before-define */
@@ -14,6 +16,7 @@ export type StrictTupleVector = Array<number> & {
   dotProduct: (TupleVector) => number,
   scalarProduct: (TupleVector) => number,
   safeProduct: (TupleVector | number) => number | TupleVector,
+  toJAXString: () => string,
   x: number,
   y: number,
   z: number
@@ -24,6 +27,8 @@ export type TupleVector = StrictTupleVector | 0;
 
 export function Vector(...tuple: Array<number>): StrictTupleVector {
   const tupleArr = ((tuple.slice(0): any): StrictTupleVector);
+  for (let i = 0; i < tupleArr.length; i++)
+    tupleArr[i] = round(tupleArr[i], 5);
 
   tupleArr.dimensions = tupleArr.length;
 
@@ -33,6 +38,7 @@ export function Vector(...tuple: Array<number>): StrictTupleVector {
   tupleArr.dotProduct = dotProduct.bind(null, tupleArr);
   tupleArr.scalarProduct = tupleArr.dotProduct;
   tupleArr.safeProduct = safeProduct.bind(null, tupleArr);
+  tupleArr.toJAXString = safeToJAXString.bind(null, tupleArr);
   /* eslint-enable no-use-before-define */
 
   tupleArr.x = clippedArrayAccess<number>(tupleArr, 0);
@@ -198,6 +204,34 @@ export function safeProduct(
 
   // $FlowFixMe
   return a * b;
+}
+
+export function safeToJAXString(
+  vector: number | StrictTupleVector,
+  forceVector: boolean = false,
+  forceNumber: boolean = true
+): string {
+  if (typeof vector === 'number') {
+    if (!forceVector) {
+      return `${ vector }`;
+    }
+    return `${ vector } \\hat{i}`;
+  }
+
+  if (vector.dimensions === 1 && forceNumber)
+    return `${vector.x}`;
+
+  if (every(vector, (comp) => comp === 0))
+    return '0';
+
+  let jaxString = '\\langle';
+  jaxString += vector.join(',');
+  jaxString += '\\rangle ';
+
+  if (jaxString === '') {
+    return '0';
+  }
+  return jaxString;
 }
 
 export function iterateVector(vector: number | StrictTupleVector,

@@ -13,12 +13,17 @@
 export interface Range {
   isIn(point: number): boolean;
   equals(otherRange: Range): boolean;
+  toJAXString(): string;
 }
 
 /**
  * @const { }
  */
 export type RangeOperator = 'intersection' | 'union';
+
+function rangeOperatorToJAXSymbol(opr: RangeOperator) {
+  return (opr === 'intersection') ? '\\cap' : '\\cup';
+}
 
 /**
  * A simple range is one continuous subset of real-numbers,
@@ -122,6 +127,13 @@ export class SimpleRange implements Range {
       this.isInclusiveUpper === otherRange.isInclusiveUpper &&
       this.isComplement === otherRange.isComplement);
   }
+
+  toJAXString(): string {
+    return `${ this.isInclusiveLower ? '[' : '(' }` +
+      `${ this.lowerBoundary }, ${ this.upperBoundary }` +
+      `${ this.isInclusiveUpper ? ']' : ')' }` +
+      `${ this.isComplement ? '\'' : '' }`;
+  }
 }
 
 /**
@@ -199,5 +211,15 @@ export class CompositeRange implements Range {
         otherRange.rangeChildren.includes(value)));
     }
     return false;
+  }
+
+  toJAXString(): string {
+    return `(${
+      this.rangeChildren.map((child) => child.toJAXString()).join(
+        rangeOperatorToJAXSymbol(this.operator)
+      )
+    })${
+      (this.isComplement) ? '\'' : ''
+    }`;
   }
 }

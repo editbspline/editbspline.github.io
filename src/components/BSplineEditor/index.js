@@ -1,13 +1,16 @@
 /* @flow */
 
 import Box from '@material-ui/core/Box';
+import { BSpline } from '../../algebra/BSpline';
 import { BSplineModel } from '../BSplineModel';
 import ControlPointsEditor from './ControlPointsEditor';
 import constant from 'lodash/constant';
 import Divider from '@material-ui/core/Divider';
+import FormLabel from '@material-ui/core/FormLabel';
 import MultiSlider from 'multi-slider/src';
 import NumberField from '../NumberField';
 import * as React from 'react';
+import SplineDecipher from './SplineDecipher';
 import times from 'lodash/times';
 import { UniformKnotVector } from '../../algebra/BSpline';
 import {
@@ -304,36 +307,61 @@ export class BSplineEditor extends React.Component<BSplineEditorProps, BSplineEd
                   onInsertControlPoint={this.onInsertControlPoint}
                   onDeleteControlPoint={this.onDeleteControlPoint} />
               </div>
+              <Divider />
+              <SplineDecipher spline={
+                BSpline(this.state.knotVector, this.state.controlPoints,
+                  this.state.curveDegree, true)
+              } />
             </Box>
           </div>
-          <Box alignItems="center"
+          <Box alignItems='center'
             display="flex"
             flexDirection="column"
             flexGrow="1"
-          >
-            <BSplineModel
-              colors={this.colors}
-              controlPoints={this.state.controlPoints}
-              curveDegree={this.state.curveDegree}
-              enforcedDimensions={this.state.dimensions}
-              knotVector={this.state.knotVector} />
-            <span style={{
-              fontWeight: 'bold',
-              fontSize: '14px',
-              alignSelf: 'flex-start',
-              margin: '8px',
-            }}>
-              Edit Knot Vector (slow)
-            </span>
-            <MultiSlider
-              colors={this.stringColors}
-              handleStrokeSize={1}
-              handleInnerDotSize={2}
-              handleSize={7}
-              height={36}
-              onChange={this.onChangeKnot}
-              trackSize={3}
-              values={this.diffKnots()} />
+            height="100vh">
+            <div style={{
+                textAlign: 'center',
+                overflowY: 'auto'
+              }}>
+              <BSplineModel
+                colors={this.colors}
+                controlPoints={this.state.controlPoints}
+                curveDegree={this.state.curveDegree}
+                enforcedDimensions={this.state.dimensions}
+                knotVector={this.state.knotVector} />
+              <Divider style={{margin: '8px', width: '90%'}}/>
+              <a href="https://www.patreon.com/bePatron?u=21071869"
+                style={{
+                    border: "1px solid " + this.stringColors[0],
+                    borderRadius: "8px",
+                    color: `${this.stringColors[0]}`,
+                    fontFamily: "roboto, cursive",
+                    padding: "8px",
+                    margin: "8px"
+                  }}>
+                Support further development by becoming a Patreon!
+              </a>
+              <Divider style={{margin: '8px', width: '90%'}}/>
+              <FormLabel style={{
+                  padding: '8px',
+                  margin: '8px',
+                  fontWeight: 'bold',
+                  fontSize: '14px',
+                }}>
+                Edit Knot Vector (slow)
+              </FormLabel>
+              <div style={{width: '100%'}}>
+                <MultiSlider
+                  colors={this.stringColors}
+                  handleStrokeSize={1}
+                  handleInnerDotSize={2}
+                  handleSize={7}
+                  height={36}
+                  onChange={this.onChangeKnot}
+                  trackSize={3}
+                  values={this.diffKnots()} />
+              </div>
+            </div>
           </Box>
         </Box>
       </div>

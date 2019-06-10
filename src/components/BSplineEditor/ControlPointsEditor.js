@@ -3,6 +3,7 @@
 import { Add, Remove } from '@material-ui/icons';
 import Box from '@material-ui/core/Box';
 import FormLabel from '@material-ui/core/FormLabel';
+import MathJax from 'react-mathjax';
 import IconButton from '@material-ui/core/IconButton';
 import * as React from 'react';
 import TextField from '@material-ui/core/TextField';
@@ -66,31 +67,38 @@ export class ControlPointsEditor extends React.Component<Props, State> {
       }}>
          Vectors
       </FormLabel>
+      <MathJax.Provider>
       {
         this.state.localControlPoints.map((point, index) => (
           <Box display="flex" flexDirection="row"
-            justifyContent="space-around" key={index}
-            margin="8px" padding="8px">
+            justifyContent="center" key={index}
+            margin="8px" padding="8px" alignItems="baseline">
+            <MathJax.Node formula={'\\langle'} />
             {
               mapVector(point, (val, idx) => (
-                <TextField key={idx} value={val}
-                  inputProps = {{ style: {
-                    textAlign: 'center',
-                    width: '48px',
-                  } }}
-                  onChange={(event) => {
-                    const newVal = parseFloat(event.target.value);
-                    if (isNaN(newVal)) {
-                      this.onLocalChangeComponent(index, idx, event.target.value);
-                    } else {
-                      this.props.onPublishComponentChange(index, idx, newVal);
-                    }
+                <React.Fragment key={idx}>
+                  <span>{(idx !== 0) ? '|' : ''}</span>
+                  <TextField value={val}
+                    inputProps = {{ style: {
+                      textAlign: 'center',
+                      width: '48px',
+                      margin: '8px'
+                      } }}
+                    onChange={(event) => {
+                      const newVal = parseFloat(event.target.value);
+                      if (isNaN(newVal)) {
+                        this.onLocalChangeComponent(index, idx, event.target.value);
+                      } else {
+                        this.props.onPublishComponentChange(index, idx, newVal);
+                      }
                   }}/>
+                </React.Fragment>
               ), this.props.enforcedDimensions)
             }
+            <MathJax.Node formula={'\\rangle'} />
             <div>
               <IconButton onClick={() => {
-                this.props.onInsertControlPoint(1, index);
+                this.props.onInsertControlPoint(1, index + 1);
               }} style={{ padding: '8px' }}>
                 <Add />
               </IconButton>
@@ -103,6 +111,7 @@ export class ControlPointsEditor extends React.Component<Props, State> {
           </Box>
         ))
       }
+      </MathJax.Provider>
     </React.Fragment>
   )
 }

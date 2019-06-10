@@ -8,4 +8,9 @@
  */
 export interface Evaluable {
   evaluate(point: number) : any;
+
+  /**
+   * Converts this expression into MathJAX format.
+   */
+  toJAXString(): string;
 }

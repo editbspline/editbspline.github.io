@@ -76,6 +76,15 @@ export class Spline implements Evaluable {
       basisPoly.evaluate(point)
     )));
   }
+
+  toJAXString(operator: string = '+') {
+    return this.basis.map(
+      (basisPoly) =>
+        `${ (basisPoly instanceof BasisPolynomial) ? '(' : '' }${
+          basisPoly.toJAXString()
+        }${ (basisPoly instanceof BasisPolynomial) ? ')' : '' }`
+    ).join(operator);
+  }
 }
 
 // $FlowFixMe

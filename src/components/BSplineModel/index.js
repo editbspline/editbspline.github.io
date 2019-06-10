@@ -12,6 +12,7 @@ import * as React from 'react';
 import reduceDimens from '../../shared/reduceDimens';
 import round from 'lodash/round';
 import shiftAndScaleVectors from '../../shared/shiftAndScaleVectors';
+import times from 'lodash/times';
 import Tracer from './Tracer';
 import TraceEmitter from './TraceEmitter';
 import {
@@ -269,8 +270,11 @@ export class BSplineModel extends React.Component<Props, State> {
     basesTrace: Array<Array<StrictTupleVector>>,
     controlPointsProjections: Array<StrictTupleVector>
   ) {
+    const darr = (this.props.enforcedDimensions === 1) ?
+     [Vector(0,0), Vector(1,0)] : [];
+
     this.pixi.visibleBounds = visibleBounds(
-      concat(mainTrace, controlPointsProjections), VISIBLE_PADDING);
+      concat(mainTrace, controlPointsProjections, darr), VISIBLE_PADDING);
     this.pixi.planarPoints = this.transformToCanvas(mainTrace, false);
     this.pixi.basisPoints = basesTrace;
     basesTrace.forEach((channel) => {

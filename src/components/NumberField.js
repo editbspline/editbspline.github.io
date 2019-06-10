@@ -115,7 +115,7 @@ export class NumberField extends React.Component<Props, State> {
   render = () => (
     <Box flexDirection="row" display="flex" alignItems="center"
       padding="8px" flexGrow="1">
-      <Box display="flex" flexDirection="column">
+      <Box display="flex" flexDirection="column" flexGrow="1">
         <FormLabel style={{
           fontSize: '14px',
           fontWeight: 'bold',

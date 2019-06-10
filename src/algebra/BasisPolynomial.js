@@ -40,4 +40,9 @@ export class BasisPolynomial implements Evaluable {
     return new BasisPolynomial(
       this.evaluator.multiply(scale), this.supportRange);
   }
+
+  toJAXString(variable: string = 'x') {
+    return `${ this.evaluator.toJAXString() },\\mspace{4mu}` +
+      `${ variable } \\in${ this.supportRange.toJAXString() }`;
+  }
 }

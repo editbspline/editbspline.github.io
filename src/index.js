@@ -7,7 +7,7 @@ import { Vector } from './algebra/Vector';
 
 const initialApplication = (
   <BSplineEditor curveDegree={2}
-    controlPoints={[ Vector(0, 0), Vector(1, 0), Vector(1, 1), Vector(0, 0), Vector(1, 0) ]} />
+    controlPoints={[2, 1, 1, 3, 2, 2, 4, 3, 3, 5, 4, 4]} />
 );
 
 const splineControllerDiv = (document.getElementById('spline-controller'): any);

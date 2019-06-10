@@ -1,7 +1,7 @@
 /* @flow */
 
 import { type Evaluable } from './Evaluable';
-import { add, safeProduct, type TupleVector } from './Vector';
+import { add, safeProduct, safeToJAXString, type TupleVector } from './Vector';
 
 /**
  * Represents a proper polynomial expression.
@@ -110,6 +110,41 @@ export class Polynomial implements Evaluable {
     }
 
     return new Polynomial(productCoefList);
+  }
+
+  toJAXString(): string {
+    let jaxString = '';
+    for (let i = 0; i < this.coefList.length; i++) {
+      if (safeToJAXString(this.coefList[i]) === '0' &&
+        !(jaxString === '' && i === this.coefList.length - 1))
+        continue;
+
+      if (typeof this.coefList[i] === 'number')
+        jaxString += (this.coefList[i] > 0) ? '+' : '-';
+      else if (this.coefList[i].dimensions === 1)
+        jaxString += (this.coefList[i].x > 0) ? '+' : '-';
+      else
+        jaxString += '+';
+      if (jaxString === '+')
+        jaxString = '';
+
+      const power = this.coefList.length - 1 - i;
+
+      if (typeof this.coefList[i] === 'number')
+        jaxString += `${Math.abs(this.coefList[i])}`;
+      else if (this.coefList[i].dimensions === 1)
+        jaxString += `${Math.abs(this.coefList[i].x)}`;
+      else {
+        jaxString += `${this.coefList[i].toJAXString()}`;
+      }
+
+      if (power !== 0 && power !== 1)
+        jaxString += `x^{${ power }}`;
+      else if (power === 1)
+        jaxString += 'x';
+    }
+
+    return jaxString;
   }
 }
 
