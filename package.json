@@ -20,7 +20,7 @@
     "@material-ui/system": "^4.0.1",
     "@pixi/filter-drop-shadow": "^3.0.3",
     "jquery": "^3.4.1",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.19",
     "multi-slider": "github:gre/multi-slider",
     "pixi.js": "^5.0.3",
     "prop-types": "^15.7.2",
